@@ -6,6 +6,7 @@ export const GetUser = createParamDecorator(
 
     if (data) {
       if (!request.user) return null;
+      //eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return request.user[data];
     }
     return request.user;

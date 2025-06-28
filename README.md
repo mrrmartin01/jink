@@ -1,7 +1,7 @@
 # Jink API
 
 A RESTful API built with [NestJS](https://nestjs.com/), [Prisma ORM](https://www.prisma.io/), and PostgreSQL.  
-It provides authentication, user management, and bookmark management features.
+It provides authentication, user management, post creation, and bookmark management features.
 
 ---
 
@@ -20,13 +20,16 @@ It provides authentication, user management, and bookmark management features.
 - [Project Structure](#project-structure)
 - [Scripts](#scripts)
 - [License](#license)
+- [Author](#author)
+- [Notes](#notes)
 
 ---
 
 ## Features
 
 - User registration and authentication (JWT)
-- User profile management
+- User profile management (view and edit)
+- Post creation and retrieval
 - Bookmark CRUD (Create, Read, Update, Delete)
 - E2E and unit testing
 - API validation with DTOs
@@ -67,9 +70,11 @@ yarn install
 Copy `.env` and `.env.test` (for testing) from the repo or create them:
 
 ```
-DATABASE_URL="postgresql://postgres:123@localhost:5434/jinkdb?schema=public"
+DATABASE_URL="postgresql://postgres:123@localhost:5434/jink?schema=public"
 JWT_SECRET='your-super-secret'
 ```
+
+> **Note:** The default database name is `jink` (not `jinkdb`).
 
 ### Database Setup
 
@@ -127,6 +132,7 @@ This will spin up a test database (see `docker-compose.yaml`), run migrations, a
 src/
   auth/         # Authentication (JWT, Passport, DTOs)
   user/         # User module (profile, edit)
+  post/         # Post module (create, list)
   bookmark/     # Bookmark module (CRUD)
   prisma/       # Prisma service and module
   main.ts       # App entry point
@@ -175,6 +181,6 @@ Feel free to use for learning or personal projects.
 
 - Update the `DATABASE_URL` and `JWT_SECRET` in your `.env` files as needed.
 - Variables in both `.env` and `.env.test` should have the same name but different values if you prefer.
-- `.env.test` would be made availbale as a guide.
+- `.env.test` is provided as a guide.
 - For production, review security and deployment best practices.
 - For more details, see the source code and Swagger docs.

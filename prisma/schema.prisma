@@ -7,6 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum PostVisibility {
+  PUBLIC
+  FOLLOWERS_ONLY
+  PRIVATE
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
@@ -15,25 +21,129 @@ model User {
   email String  @unique
   hash  String?
 
+  userName    String  @unique
+  displayName String?
+  bio         String?
+
   firstName String?
   lastName  String?
 
+  posts     Post[]
+  likes     Like[]
   bookmarks Bookmark[]
+  retweets  Retweet[]
+  quotes    Quote[]
+
+  following Follow[] @relation("Following")
+  followers Follow[] @relation("Followers")
+
+  pinnedPostId Int?
+  pinnedPost   Post? @relation("PinnedPost", fields: [pinnedPostId], references: [id])
 
   @@map("users")
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  content String
+  link    String?
+
+  visibility PostVisibility @default(PUBLIC)
+  isPinned   Boolean        @default(false)
+  isDeleted  Boolean        @default(false)
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  // Replies
+  replies   Post[] @relation("ReplyThread")
+  replyToId Int?
+  replyTo   Post?  @relation("ReplyThread", fields: [replyToId], references: [id])
+
+  // Quotes & Retweets
+  retweets Retweet[]
+  quotes   Quote[]
+
+  // Engagement
+  likes     Like[]
+  bookmarks Bookmark[]
+
+  pinnedBy User[] @relation("PinnedPost")
+
+  @@index([userId, createdAt])
+  @@map("posts")
+}
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  userId Int
+  postId Int
+
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
+  @@map("likes")
 }
 
 model Bookmark {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  title       String
-  description String?
-  link        String
+  userId Int
+  postId Int
+
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
+  @@map("bookmarks")
+}
+
+model Retweet {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  userId Int
+  postId Int
+
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
+  @@map("retweets")
+}
+
+model Quote {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  content String
 
   userId Int
   user   User @relation(fields: [userId], references: [id])
 
-  @@map("bookmarks")
+  postId Int
+  post   Post @relation(fields: [postId], references: [id])
+
+  @@map("quotes")
+}
+
+model Follow {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  followerId  Int
+  followingId Int
+
+  follower  User @relation("Following", fields: [followerId], references: [id])
+  following User @relation("Followers", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
+  @@map("follows")
 }
