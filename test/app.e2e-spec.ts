@@ -4,7 +4,7 @@ import { AppModule } from '../src/app.module';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { EditUserDto } from 'src/user/dto';
-import { CreatePostDto } from 'src/post/dto';
+import { CreatePostDto, EditPostDto } from 'src/post/dto';
 
 describe('App e2e', () => {
   let app: INestApplication;
@@ -174,6 +174,7 @@ describe('App e2e', () => {
       });
     });
   });
+
   describe('Posts', () => {
     describe('Create post', () => {
       const dto: CreatePostDto = {
@@ -189,13 +190,52 @@ describe('App e2e', () => {
           .expectStatus(201)
           .stores('postId', 'id');
       });
-      it('Should return all posts', () => {
-        return pactum
-          .spec()
-          .get('/posts')
-          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
-          .expectStatus(200)
-          .inspect();
+      describe('Return posts', () => {
+        it('Should return all posts', () => {
+          return pactum
+            .spec()
+            .get('/posts')
+            .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+            .expectStatus(200);
+        });
+      });
+      describe('Return :id post', () => {
+        it('Should return unique post', () => {
+          return pactum
+            .spec()
+            .get('/posts/$S{postId}')
+            .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+            .expectStatus(200)
+            .inspect();
+        });
+      });
+      describe('cRUD for posts', () => {
+        it('Should edit the post', () => {
+          const dto: EditPostDto = {
+            content: 'Holla worldo',
+            link: 'htts://hello.worldQx',
+          };
+          return pactum
+            .spec()
+            .patch('/posts/$S{postId}')
+            .withBody(dto)
+            .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+            .expectStatus(200);
+        });
+        it('Should delete post with unique id', () => {
+          return pactum
+            .spec()
+            .delete('/posts/$S{postId}')
+            .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+            .expectStatus(204);
+        });
+        it('Should return empty post array', () => {
+          return pactum
+            .spec()
+            .get('/posts')
+            .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+            .expectBody([]);
+        });
       });
     });
   });

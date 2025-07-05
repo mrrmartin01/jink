@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { Post } from '@prisma/client';
 import { CreatePostDto } from './dto/create-post.dto';
+import { EditPostDto } from './dto';
 
 @Injectable()
 export class PostService {
@@ -26,5 +27,50 @@ export class PostService {
       },
     });
     return posts;
+  }
+
+  getPostById(userId: number, postId: number) {
+    return this.prisma.post.findFirst({
+      where: {
+        id: postId,
+        userId,
+      },
+    });
+  }
+
+  async editPostById(postId: number, userId: number, dto: EditPostDto) {
+    const post = await this.prisma.post.findUnique({
+      where: {
+        id: postId,
+      },
+    });
+
+    if (!post || post.userId !== userId)
+      throw new ForbiddenException('Access denied');
+    return this.prisma.post.update({
+      where: {
+        id: postId,
+      },
+      data: {
+        ...dto,
+      },
+    });
+  }
+
+  async deletePostById(postId: number, userId: number) {
+    const post = await this.prisma.post.findUnique({
+      where: {
+        id: postId,
+      },
+    });
+
+    if (!post || post.userId !== userId)
+      throw new ForbiddenException('Access denied');
+
+    return this.prisma.post.delete({
+      where: {
+        id: postId,
+      },
+    });
   }
 }
