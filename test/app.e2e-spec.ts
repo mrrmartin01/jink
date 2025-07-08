@@ -190,52 +190,52 @@ describe('App e2e', () => {
           .expectStatus(201)
           .stores('postId', 'id');
       });
-      describe('Return posts', () => {
-        it('Should return all posts', () => {
-          return pactum
-            .spec()
-            .get('/posts')
-            .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
-            .expectStatus(200);
-        });
+    });
+    describe('Return posts', () => {
+      it('Should return all posts', () => {
+        return pactum
+          .spec()
+          .get('/posts')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(200);
       });
-      describe('Return :id post', () => {
-        it('Should return unique post', () => {
-          return pactum
-            .spec()
-            .get('/posts/$S{postId}')
-            .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
-            .expectStatus(200)
-            .inspect();
-        });
+    });
+    describe('Return :id post', () => {
+      it('Should return unique post', () => {
+        return pactum
+          .spec()
+          .get('/posts/$S{postId}')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(200)
+          .inspect();
       });
-      describe('cRUD for posts', () => {
-        it('Should edit the post', () => {
-          const dto: EditPostDto = {
-            content: 'Holla worldo',
-            link: 'htts://hello.worldQx',
-          };
-          return pactum
-            .spec()
-            .patch('/posts/$S{postId}')
-            .withBody(dto)
-            .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
-            .expectStatus(200);
-        });
-        it('Should delete post with unique id', () => {
-          return pactum
-            .spec()
-            .delete('/posts/$S{postId}')
-            .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
-            .expectStatus(204);
-        });
-        it('Should return empty post array', () => {
-          return pactum
-            .spec()
-            .get('/posts')
-            .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
-            .expectBody([]);
-        });
+    });
+    describe('cRUD for posts', () => {
+      it('Should edit the post', () => {
+        const dto: EditPostDto = {
+          content: 'Holla worldo',
+          link: 'htts://hello.worldQx',
+        };
+        return pactum
+          .spec()
+          .patch('/posts/$S{postId}')
+          .withBody(dto)
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(200);
+      });
+      it('Should delete post with unique id', () => {
+        return pactum
+          .spec()
+          .delete('/posts/$S{postId}')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(204);
+      });
+      it('Should return empty post array', () => {
+        return pactum
+          .spec()
+          .get('/posts')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectBody([]);
       });
     });
   });
