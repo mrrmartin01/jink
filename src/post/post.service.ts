@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { PrismaService } from '../../src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { Post } from '@prisma/client';
 import { CreatePostDto } from './dto/create-post.dto';
 import { EditPostDto } from './dto';
@@ -8,7 +8,7 @@ import { EditPostDto } from './dto';
 export class PostService {
   constructor(private prisma: PrismaService) {}
 
-  async createPost(userId: number, dto: CreatePostDto): Promise<Post> {
+  async createPost(userId: string, dto: CreatePostDto): Promise<Post> {
     const post: Post = await this.prisma.post.create({
       data: {
         content: dto.content,
@@ -20,7 +20,7 @@ export class PostService {
     return post;
   }
 
-  async getPosts(userId: number): Promise<Post[]> {
+  async getPosts(userId: string): Promise<Post[]> {
     const posts: Post[] = await this.prisma.post.findMany({
       where: {
         userId,
@@ -29,16 +29,15 @@ export class PostService {
     return posts;
   }
 
-  getPostById(userId: number, postId: number) {
+  getPostById(postId: string): Promise<Post | null> {
     return this.prisma.post.findFirst({
       where: {
         id: postId,
-        userId,
       },
     });
   }
 
-  async editPostById(postId: number, userId: number, dto: EditPostDto) {
+  async editPostById(postId: string, userId: string, dto: EditPostDto) {
     const post = await this.prisma.post.findUnique({
       where: {
         id: postId,
@@ -57,19 +56,24 @@ export class PostService {
     });
   }
 
-  async deletePostById(postId: number, userId: number) {
+  async deletePostById(postId: string, userId: string) {
     const post = await this.prisma.post.findUnique({
-      where: {
-        id: postId,
-      },
+      where: { id: postId },
     });
 
     if (!post || post.userId !== userId)
       throw new ForbiddenException('Access denied');
 
-    return this.prisma.post.delete({
+    return this.prisma.post.update({
+      where: { id: postId },
+      data: { isDeleted: true },
+    });
+  }
+
+  async getReplies(postId: string): Promise<Post[]> {
+    return this.prisma.post.findMany({
       where: {
-        id: postId,
+        replyToId: postId,
       },
     });
   }

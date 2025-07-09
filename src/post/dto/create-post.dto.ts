@@ -13,6 +13,6 @@ export class CreatePostDto {
   link?: string;
 
   @IsOptional()
-  @ApiProperty({ example: 12, required: false })
-  replyToId?: number;
+  @ApiProperty({ example: '12', required: false })
+  replyToId?: string;
 }

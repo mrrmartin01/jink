@@ -14,7 +14,7 @@ enum PostVisibility {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
+  id        String      @id @default(uuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -37,14 +37,14 @@ model User {
   following Follow[] @relation("Following")
   followers Follow[] @relation("Followers")
 
-  pinnedPostId Int?
+  pinnedPostId String?
   pinnedPost   Post? @relation("PinnedPost", fields: [pinnedPostId], references: [id])
 
   @@map("users")
 }
 
 model Post {
-  id        Int      @id @default(autoincrement())
+  id         String      @id @default(uuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -55,12 +55,12 @@ model Post {
   isPinned   Boolean        @default(false)
   isDeleted  Boolean        @default(false)
 
-  userId Int
+  userId String
   user   User @relation(fields: [userId], references: [id])
 
   // Replies
   replies   Post[] @relation("ReplyThread")
-  replyToId Int?
+  replyToId String?
   replyTo   Post?  @relation("ReplyThread", fields: [replyToId], references: [id])
 
   // Quotes & Retweets
@@ -78,11 +78,11 @@ model Post {
 }
 
 model Like {
-  id        Int      @id @default(autoincrement())
+  id         String      @id @default(uuid())
   createdAt DateTime @default(now())
 
-  userId Int
-  postId Int
+  userId String
+  postId String
 
   user User @relation(fields: [userId], references: [id])
   post Post @relation(fields: [postId], references: [id])
@@ -92,11 +92,11 @@ model Like {
 }
 
 model Bookmark {
-  id        Int      @id @default(autoincrement())
+  id         String      @id @default(uuid())
   createdAt DateTime @default(now())
 
-  userId Int
-  postId Int
+  userId String
+  postId String
 
   user User @relation(fields: [userId], references: [id])
   post Post @relation(fields: [postId], references: [id])
@@ -106,11 +106,11 @@ model Bookmark {
 }
 
 model Retweet {
-  id        Int      @id @default(autoincrement())
+  id         String      @id @default(uuid())
   createdAt DateTime @default(now())
 
-  userId Int
-  postId Int
+  userId String
+  postId String
 
   user User @relation(fields: [userId], references: [id])
   post Post @relation(fields: [postId], references: [id])
@@ -120,26 +120,26 @@ model Retweet {
 }
 
 model Quote {
-  id        Int      @id @default(autoincrement())
+  id         String      @id @default(uuid())
   createdAt DateTime @default(now())
 
   content String
 
-  userId Int
+  userId String
   user   User @relation(fields: [userId], references: [id])
 
-  postId Int
+  postId String
   post   Post @relation(fields: [postId], references: [id])
 
   @@map("quotes")
 }
 
 model Follow {
-  id        Int      @id @default(autoincrement())
+  id         String      @id @default(uuid())
   createdAt DateTime @default(now())
 
-  followerId  Int
-  followingId Int
+  followerId  String
+  followingId String
 
   follower  User @relation("Following", fields: [followerId], references: [id])
   following User @relation("Followers", fields: [followingId], references: [id])

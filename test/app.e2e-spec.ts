@@ -37,18 +37,33 @@ describe('App e2e', () => {
   });
 
   describe('Auth', () => {
-    const signupDto = {
-      email: 'testing@mail.com',
-      userName: 'testing_user',
-      firstName: 'Test',
-      lastName: 'User',
-      password: 'test123',
-    };
+    const signupDto = [
+      {
+        email: 'testing@mail.com',
+        userName: 'testing_user',
+        firstName: 'Test',
+        lastName: 'User',
+        password: 'test123',
+      },
+      {
+        email: 'user2@mail.com',
+        userName: 'user_2',
+        firstName: 'User',
+        lastName: 'Two',
+        password: 'test123',
+      },
+    ];
 
-    const SigninDto = {
-      identifier: signupDto.email || signupDto.userName,
-      password: signupDto.password,
-    };
+    const SigninDto = [
+      {
+        identifier: signupDto[0].email || signupDto[0].userName,
+        password: signupDto[0].password,
+      },
+      {
+        identifier: signupDto[1].email || signupDto[1].userName,
+        password: signupDto[1].password,
+      },
+    ];
 
     describe('Signup', () => {
       it('should throw if email is empty', () => {
@@ -56,8 +71,8 @@ describe('App e2e', () => {
           .spec()
           .post('/auth/signup')
           .withBody({
-            password: signupDto.password,
-            userName: signupDto.userName,
+            password: signupDto[0].password,
+            userName: signupDto[0].userName,
           })
           .expectStatus(400);
       });
@@ -67,8 +82,8 @@ describe('App e2e', () => {
           .spec()
           .post('/auth/signup')
           .withBody({
-            email: signupDto.email,
-            userName: signupDto.userName,
+            email: signupDto[0].email,
+            userName: signupDto[0].userName,
           })
           .expectStatus(400);
       });
@@ -78,8 +93,8 @@ describe('App e2e', () => {
           .spec()
           .post('/auth/signup')
           .withBody({
-            email: signupDto.email,
-            password: signupDto.password,
+            email: signupDto[0].email,
+            password: signupDto[0].password,
           })
           .expectStatus(400);
       });
@@ -88,11 +103,19 @@ describe('App e2e', () => {
         return pactum.spec().post('/auth/signup').expectStatus(400);
       });
 
-      it('should sign up', () => {
+      it('should sign up user 1', () => {
         return pactum
           .spec()
           .post('/auth/signup')
-          .withBody(signupDto)
+          .withBody(signupDto[0])
+          .expectStatus(201);
+      });
+
+      it('should sign up user 2', () => {
+        return pactum
+          .spec()
+          .post('/auth/signup')
+          .withBody(signupDto[1])
           .expectStatus(201);
       });
     });
@@ -103,7 +126,7 @@ describe('App e2e', () => {
           .spec()
           .post('/auth/signin')
           .withBody({
-            password: SigninDto.password,
+            password: SigninDto[0].password,
           })
           .expectStatus(400);
       });
@@ -113,7 +136,7 @@ describe('App e2e', () => {
           .spec()
           .post('/auth/signin')
           .withBody({
-            identifier: SigninDto.identifier,
+            identifier: SigninDto[0].identifier,
           })
           .expectStatus(400);
       });
@@ -122,22 +145,42 @@ describe('App e2e', () => {
         return pactum.spec().post('/auth/signin').expectStatus(400);
       });
 
-      it('should sign in with email', () => {
+      it('should sign in user 1 with email', () => {
         return pactum
           .spec()
           .post('/auth/signin')
-          .withBody(SigninDto)
+          .withBody(SigninDto[0])
           .expectStatus(200)
           .stores('userAccessToken', 'access_token');
       });
 
-      it('should sign in with username', () => {
+      it('should sign in user 2 with email', () => {
+        return pactum
+          .spec()
+          .post('/auth/signin')
+          .withBody(SigninDto[1])
+          .expectStatus(200)
+          .stores('userAccessToken2', 'access_token');
+      });
+
+      it('should sign in user 1 with username', () => {
         return pactum
           .spec()
           .post('/auth/signin')
           .withBody({
-            identifier: signupDto.userName,
-            password: signupDto.password,
+            identifier: signupDto[0].userName,
+            password: signupDto[0].password,
+          })
+          .expectStatus(200);
+      });
+
+      it('should sign in user 2 with username', () => {
+        return pactum
+          .spec()
+          .post('/auth/signin')
+          .withBody({
+            identifier: signupDto[1].userName,
+            password: signupDto[1].password,
           })
           .expectStatus(200);
       });
@@ -146,12 +189,22 @@ describe('App e2e', () => {
 
   describe('User', () => {
     describe('Get me', () => {
-      it('Should get current user', () => {
+      it('Should get current user 1', () => {
         return pactum
           .spec()
           .get('/users/me')
           .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
-          .expectStatus(200);
+          .expectStatus(200)
+          .stores('userId1', 'id');
+      });
+
+      it('Should get current user 2', () => {
+        return pactum
+          .spec()
+          .get('/users/me')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken2}' })
+          .expectStatus(200)
+          .stores('userId2', 'id');
       });
     });
 
@@ -206,8 +259,7 @@ describe('App e2e', () => {
           .spec()
           .get('/posts/$S{postId}')
           .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
-          .expectStatus(200)
-          .inspect();
+          .expectStatus(200);
       });
     });
     describe('cRUD for posts', () => {
@@ -230,11 +282,64 @@ describe('App e2e', () => {
           .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
           .expectStatus(204);
       });
-      it('Should return empty post array', () => {
+      it('Should return delated post array', () => {
         return pactum
           .spec()
           .get('/posts')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' });
+      });
+    });
+    describe('Replies', () => {
+      it('Should return all post replies', () => {
+        return pactum
+          .spec()
+          .get('/posts/$S{postId}/replies')
           .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(200);
+      });
+    });
+
+    describe('Follow', () => {
+      it('Should follow a user (id: 2)', async () => {
+        return pactum
+          .spec()
+          .post('/follows/$S{userId2}')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(201);
+      });
+
+      it('Should get list of followers for user 2', () => {
+        return pactum
+          .spec()
+          .get('/follows/$S{userId2}/followers')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken2}' })
+          .expectStatus(200)
+          .expectJsonLength(1);
+      });
+
+      it('Should get list of following for user 1', () => {
+        return pactum
+          .spec()
+          .get('/follows/$S{userId1}/following')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(200)
+          .expectJsonLength(1);
+      });
+
+      it('Should unfollow user 2', () => {
+        return pactum
+          .spec()
+          .delete('/follows/$S{userId2}')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(204);
+      });
+
+      it('Should return empty followers list for user 2 after unfollow', () => {
+        return pactum
+          .spec()
+          .get('/follows/$S{userId2}/followers')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken2}' })
+          .expectStatus(200)
           .expectBody([]);
       });
     });

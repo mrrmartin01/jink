@@ -6,7 +6,6 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   UseGuards,
@@ -22,38 +21,37 @@ export class PostController {
   constructor(private postService: PostService) {}
 
   @Post()
-  createPost(@GetUser('id') userId: number, @Body() dto: CreatePostDto) {
+  createPost(@GetUser('id') userId: string, @Body() dto: CreatePostDto) {
     return this.postService.createPost(userId, dto);
   }
 
   @Get()
-  getPosts(@GetUser('id') userId: number) {
+  getPosts(@GetUser('id') userId: string) {
     return this.postService.getPosts(userId);
   }
 
   @Get(':id')
-  getPostById(
-    @GetUser('id') userId: number,
-    @Param('id', ParseIntPipe) postId: number,
-  ) {
-    return this.postService.getPostById(userId, postId);
+  getPostById(@GetUser('id') userId: string, @Param('id') postId: string) {
+    return this.postService.getPostById(postId);
   }
 
   @Patch(':id')
   editPostById(
-    @GetUser('id') userId: number,
+    @GetUser('id') userId: string,
     @Body() dto: EditPostDto,
-    @Param('id', ParseIntPipe) postId: number,
+    @Param('id') postId: string,
   ) {
-    return this.postService.editPostById(userId, postId, dto);
+    return this.postService.editPostById(postId, userId, dto);
   }
 
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':id')
-  deletePostById(
-    @GetUser('id') userId: number,
-    @Param('id', ParseIntPipe) postId: number,
-  ) {
-    return this.postService.deletePostById(userId, postId);
+  deletePostById(@GetUser('id') userId: string, @Param('id') postId: string) {
+    return this.postService.deletePostById(postId, userId);
+  }
+
+  @Get(':id/replies')
+  getReplies(@Param('id') postId: string) {
+    return this.postService.getReplies(postId);
   }
 }
