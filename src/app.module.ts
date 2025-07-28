@@ -5,6 +5,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { PostModule } from './post/post.module';
 import { FollowModule } from './follow/follow.module';
+import { LikeModule } from './like/like.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -13,6 +14,7 @@ import { FollowModule } from './follow/follow.module';
     PrismaModule,
     PostModule,
     FollowModule,
+    LikeModule,
   ],
 })
 export class AppModule {}

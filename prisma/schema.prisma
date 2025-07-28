@@ -14,7 +14,7 @@ enum PostVisibility {
 }
 
 model User {
-  id        String      @id @default(uuid())
+  id        String   @id @default(uuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -38,13 +38,13 @@ model User {
   followers Follow[] @relation("Followers")
 
   pinnedPostId String?
-  pinnedPost   Post? @relation("PinnedPost", fields: [pinnedPostId], references: [id])
+  pinnedPost   Post?   @relation("PinnedPost", fields: [pinnedPostId], references: [id])
 
   @@map("users")
 }
 
 model Post {
-  id         String      @id @default(uuid())
+  id        String   @id @default(uuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -56,12 +56,12 @@ model Post {
   isDeleted  Boolean        @default(false)
 
   userId String
-  user   User @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
 
   // Replies
-  replies   Post[] @relation("ReplyThread")
+  replies   Post[]  @relation("ReplyThread")
   replyToId String?
-  replyTo   Post?  @relation("ReplyThread", fields: [replyToId], references: [id])
+  replyTo   Post?   @relation("ReplyThread", fields: [replyToId], references: [id])
 
   // Quotes & Retweets
   retweets Retweet[]
@@ -78,7 +78,7 @@ model Post {
 }
 
 model Like {
-  id         String      @id @default(uuid())
+  id        String   @id @default(uuid())
   createdAt DateTime @default(now())
 
   userId String
@@ -92,7 +92,7 @@ model Like {
 }
 
 model Bookmark {
-  id         String      @id @default(uuid())
+  id        String   @id @default(uuid())
   createdAt DateTime @default(now())
 
   userId String
@@ -106,7 +106,7 @@ model Bookmark {
 }
 
 model Retweet {
-  id         String      @id @default(uuid())
+  id        String   @id @default(uuid())
   createdAt DateTime @default(now())
 
   userId String
@@ -120,22 +120,22 @@ model Retweet {
 }
 
 model Quote {
-  id         String      @id @default(uuid())
+  id        String   @id @default(uuid())
   createdAt DateTime @default(now())
 
   content String
 
   userId String
-  user   User @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
 
   postId String
-  post   Post @relation(fields: [postId], references: [id])
+  post   Post   @relation(fields: [postId], references: [id])
 
   @@map("quotes")
 }
 
 model Follow {
-  id         String      @id @default(uuid())
+  id        String   @id @default(uuid())
   createdAt DateTime @default(now())
 
   followerId  String

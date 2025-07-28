@@ -343,5 +343,52 @@ describe('App e2e', () => {
           .expectBody([]);
       });
     });
+
+    describe('Likes', () => {
+      it('should like a post', () => {
+        return pactum
+          .spec()
+          .post('/like')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .withBody({ postId: '$S{postId}' })
+          .expectStatus(201);
+      });
+
+      it('should confirm that the user has liked the post', () => {
+        return pactum
+          .spec()
+          .get('/like/$S{postId}')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(200)
+          .expectJsonLike({ hasLiked: true });
+      });
+
+      it('should get likes for the post', () => {
+        return pactum
+          .spec()
+          .get('/like?postId=$S{postId}')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(200)
+          .expectJsonLength(1);
+      });
+
+      it('should unlike the post', () => {
+        return pactum
+          .spec()
+          .delete('/like')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .withBody({ postId: '$S{postId}' })
+          .expectStatus(204);
+      });
+
+      it('should confirm that the user has not liked the post', () => {
+        return pactum
+          .spec()
+          .get('/like/$S{postId}')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(200)
+          .expectJsonLike({ hasLiked: false });
+      });
+    });
   });
 });
