@@ -7,6 +7,7 @@ import { PostModule } from './post/post.module';
 import { FollowModule } from './follow/follow.module';
 import { LikeModule } from './like/like.module';
 import { RepostModule } from './repost/repost.module';
+import { QuoteModule } from './quote/quote.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -17,6 +18,7 @@ import { RepostModule } from './repost/repost.module';
     FollowModule,
     LikeModule,
     RepostModule,
+    QuoteModule,
   ],
 })
 export class AppModule {}

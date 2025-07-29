@@ -5,6 +5,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { EditUserDto } from 'src/user/dto';
 import { CreatePostDto, EditPostDto } from 'src/post/dto';
+import { CreateQuoteDto } from 'src/quote/dto/create-quote.dto';
 
 describe('App e2e', () => {
   let app: INestApplication;
@@ -496,6 +497,65 @@ describe('App e2e', () => {
           .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
           .withBody({})
           .expectStatus(400);
+      });
+    });
+    describe('Quotes', () => {
+      const dto: CreateQuoteDto = {
+        postId: '$S{postId}',
+        content: 'This is a quote content',
+      };
+      it('should create a quote', () => {
+        return pactum
+          .spec()
+          .post('/quote')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .withBody(dto)
+          .expectStatus(201)
+          .stores('quoteId', 'id');
+      });
+      it('should return quote count', () => {
+        return pactum
+          .spec()
+          .get('/quote/$S{postId}/count')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(200);
+      });
+      it('should fail to create a quote for non-existent post', () => {
+        return pactum
+          .spec()
+          .post('/quote')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .withBody({ ...dto, postId: 'non-existent-post-id' })
+          .expectStatus(404);
+      });
+      it('should get all quotes for a post', () => {
+        return pactum
+          .spec()
+          .get('/quote/$S{postId}')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(200);
+      });
+      it('should edit a quote', () => {
+        return pactum
+          .spec()
+          .patch('/quote/$S{quoteId}')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .withBody({ ...dto, content: 'edited content' })
+          .expectStatus(200);
+      });
+      it('should delete a quote', () => {
+        return pactum
+          .spec()
+          .delete('/quote/$S{quoteId}')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(204);
+      });
+      it('should return 404 on delete of non-existent quote', () => {
+        return pactum
+          .spec()
+          .get('/quote/$S{quoteId}')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(404);
       });
     });
   });
