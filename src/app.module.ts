@@ -8,6 +8,7 @@ import { FollowModule } from './follow/follow.module';
 import { LikeModule } from './like/like.module';
 import { RepostModule } from './repost/repost.module';
 import { QuoteModule } from './quote/quote.module';
+import { BookmarkModule } from './bookmark/bookmark.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -19,6 +20,7 @@ import { QuoteModule } from './quote/quote.module';
     LikeModule,
     RepostModule,
     QuoteModule,
+    BookmarkModule,
   ],
 })
 export class AppModule {}

@@ -558,5 +558,29 @@ describe('App e2e', () => {
           .expectStatus(404);
       });
     });
+
+    describe('Bookmarks', () => {
+      it('should add a bookmark', () => {
+        return pactum
+          .spec()
+          .post('/bookmarks/$S{postId}')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(201);
+      });
+      it('should get all bookmarks', () => {
+        return pactum
+          .spec()
+          .get('/bookmarks')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(200);
+      });
+      it('should add a bookmark', () => {
+        return pactum
+          .spec()
+          .delete('/bookmarks/$S{postId}')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(204);
+      });
+    });
   });
 });

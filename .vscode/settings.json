@@ -1,4 +1,5 @@
 {
     "files.eol": "auto",
-    "files.trimFinalNewlines": false
+    "files.trimFinalNewlines": false,
+    "github.copilot.chat.codeGeneration.useInstructionFiles": true
 }
