@@ -100,7 +100,11 @@ yarn start:dev
 
 The API will be available at [http://localhost:9000](http://localhost:9000) (default).
 
+
 ---
+
+> **Note:** The default port can be changed by apending `-p 5000` to `"start": "nest start"` at [package.json](./package.json) to run it at port 5000.
+
 
 ## API Documentation
 
@@ -184,3 +188,9 @@ Feel free to use for learning or personal projects.
 - `.env.test` is provided as a guide.
 - For production, review security and deployment best practices.
 - For more details, see the source code and Swagger docs.
+
+
+## Happy coding
+
+
+*The simple dark-themed fella*
