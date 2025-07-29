@@ -390,5 +390,113 @@ describe('App e2e', () => {
           .expectJsonLike({ hasLiked: false });
       });
     });
+
+    describe('Reposts', () => {
+      beforeAll(async () => {
+        // Create a new post to repost
+        const dto: CreatePostDto = {
+          content: 'Repost me!',
+        };
+
+        await pactum
+          .spec()
+          .post('/posts')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken2}' })
+          .withBody(dto)
+          .expectStatus(201)
+          .stores('repostedPostId', 'id');
+      });
+
+      it('should repost a post', () => {
+        return pactum
+          .spec()
+          .post('/reposts')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .withBody({ postId: '$S{repostedPostId}' })
+          .expectStatus(201)
+          .stores('repostId', 'id');
+      });
+
+      it('should prevent reposting the same post twice', () => {
+        return pactum
+          .spec()
+          .post('/reposts')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .withBody({ postId: '$S{repostedPostId}' })
+          .expectStatus(409);
+      });
+
+      it('should confirm the post was reposted', () => {
+        return pactum
+          .spec()
+          .get('/reposts/$S{repostedPostId}')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(200)
+          .expectJsonLike({ hasReposted: true });
+      });
+
+      it('should get all reposts for the post', () => {
+        return pactum
+          .spec()
+          .get('/reposts?postId=$S{repostedPostId}')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken2}' })
+          .expectStatus(200)
+          .expectJsonLength(1);
+      });
+
+      it('should delete a repost', () => {
+        return pactum
+          .spec()
+          .delete('/reposts')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .withBody({ postId: '$S{repostedPostId}' })
+          .expectStatus(204);
+      });
+
+      it('should confirm the post is no longer reposted', () => {
+        return pactum
+          .spec()
+          .get('/reposts/$S{repostedPostId}')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .expectStatus(200)
+          .expectJsonLike({ hasReposted: false });
+      });
+
+      it('should handle reposting a non-existent post', () => {
+        return pactum
+          .spec()
+          .post('/reposts')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .withBody({ postId: 'non-existent-id' })
+          .expectStatus(404);
+      });
+
+      it('should handle deleting a non-existent repost', () => {
+        return pactum
+          .spec()
+          .delete('/reposts')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .withBody({ postId: 'non-existent-id' })
+          .expectStatus(404);
+      });
+
+      it('should return 400 for missing postId on create', () => {
+        return pactum
+          .spec()
+          .post('/reposts')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .withBody({})
+          .expectStatus(400);
+      });
+
+      it('should return 400 for missing postId on delete', () => {
+        return pactum
+          .spec()
+          .delete('/reposts')
+          .withHeaders({ Authorization: 'Bearer $S{userAccessToken}' })
+          .withBody({})
+          .expectStatus(400);
+      });
+    });
   });
 });
