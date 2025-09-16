@@ -1,7 +1,13 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { SigninDto, SignupDto } from './dto';
+import {
+  SigninDto,
+  SignupDto,
+  RefreshTokenDto,
+  RequestPasswordResetDto,
+} from './dto';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('auth')
 @ApiBearerAuth()
@@ -9,14 +15,32 @@ import { SigninDto, SignupDto } from './dto';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @Post('request-password-reset')
+  @HttpCode(HttpStatus.OK)
+  requestPasswordReset(@Body() dto: RequestPasswordResetDto) {
+    return this.authService.requestPasswordReset(dto);
+  }
+
+  @Throttle({ auth: {} })
   @Post('signup')
   signup(@Body() dto: SignupDto) {
     return this.authService.signup(dto);
   }
 
+  @Throttle({ auth: {} })
   @HttpCode(HttpStatus.OK)
   @Post('signin')
   signin(@Body() dto: SigninDto) {
     return this.authService.signin(dto);
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh(@Body() body: RefreshTokenDto) {
+    const { refreshToken } = body;
+    if (!refreshToken) {
+      return { message: 'refresh token is required' };
+    }
+    return this.authService.refreshTokensWithToken(refreshToken);
   }
 }

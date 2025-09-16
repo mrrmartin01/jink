@@ -9,9 +9,17 @@ import { LikeModule } from './like/like.module';
 import { RepostModule } from './repost/repost.module';
 import { QuoteModule } from './quote/quote.module';
 import { BookmarkModule } from './bookmark/bookmark.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'auth',
+        ttl: 60,
+        limit: 5,
+      },
+    ]),
     AuthModule,
     UserModule,
     PrismaModule,
