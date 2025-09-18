@@ -1,4 +1,9 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EditUserDto, ResetPasswordDto } from './dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
@@ -9,28 +14,44 @@ export class UserService {
   constructor(private prisma: PrismaService) {}
 
   async editUser(userId: string, dto: EditUserDto) {
-    const user = await this.prisma.user.findFirst({
+    console.log(dto);
+    if (!userId) throw new ForbiddenException('No user id');
+    if (!dto) throw new BadRequestException('No data was provided');
+    const user = await this.prisma.user.findUnique({
       where: {
-        email: dto.email,
+        id: userId,
       },
     });
-    if (user?.email) throw new ForbiddenException('Email is taken');
-    if (user?.userName) {
-      const newName =
-        user.userName + '-' + Math.random().toString(36).slice(2, 5);
-      throw new ForbiddenException({
-        message: 'Username is taken',
-        suggestion: newName,
+    if (!user) throw new NotFoundException('User not found');
+    if (dto.email) {
+      const existingEmail = await this.prisma.user.findFirst({
+        where: {
+          email: dto.email,
+        },
       });
+      if (existingEmail) throw new BadRequestException('Email is taken');
     }
+    if (dto.userName) {
+      const existingUsername = await this.prisma.user.findFirst({
+        where: {
+          userName: dto.userName,
+        },
+      });
+      if (existingUsername) {
+        const newName =
+          user.userName + '_' + Math.random().toString(36).slice(2, 5);
+        throw new ForbiddenException({
+          message: 'Username is taken',
+          suggestion: newName,
+        });
+      }
+    }
+
     try {
-      const user = await this.prisma.user.update({
+      await this.prisma.user.update({
         where: { id: userId },
         data: dto,
       });
-      //eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { hash, ...userWithoutPassword } = user;
-      return userWithoutPassword;
     } catch (error) {
       if (
         error instanceof PrismaClientKnownRequestError &&
@@ -40,6 +61,7 @@ export class UserService {
       }
       throw error;
     }
+    return { message: 'Profile editted succesfully' };
   }
 
   async resetPassword(dto: ResetPasswordDto) {
