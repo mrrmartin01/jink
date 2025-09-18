@@ -12,7 +12,8 @@ import {
   SigninDto,
   SignupDto,
   RefreshTokenDto,
-  RequestPasswordResetDto,
+  ForgotPasswordDto,
+  VerifyUserDto,
 } from './dto';
 import { Throttle } from '@nestjs/throttler';
 
@@ -22,10 +23,10 @@ import { Throttle } from '@nestjs/throttler';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Post('request-password-reset')
+  @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
-  requestPasswordReset(@Body() dto: RequestPasswordResetDto) {
-    return this.authService.requestPasswordReset(dto);
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
   }
 
   @Throttle({ auth: {} })
@@ -35,10 +36,30 @@ export class AuthController {
   }
 
   @Throttle({ auth: {} })
+  @Post('verify')
+  @HttpCode(HttpStatus.OK)
+  async verify(@Body() dto: VerifyUserDto) {
+    return await this.authService.verifyAccount(dto);
+  }
+
+  @Throttle({ auth: {} })
+  @Post('re-verify')
+  @HttpCode(HttpStatus.OK)
+  async re_verify(@Body() body: VerifyUserDto) {
+    return await this.authService.re_verifyAccount(body);
+  }
+
+  @Throttle({ auth: {} })
   @HttpCode(HttpStatus.OK)
   @Post('signin')
   signin(@Body() dto: SigninDto) {
     return this.authService.signin(dto);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('signout')
+  signout(@Body() body: RefreshTokenDto) {
+    return this.authService.signout(body);
   }
 
   @Post('refresh')

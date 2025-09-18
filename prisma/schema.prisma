@@ -18,11 +18,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  email String  @unique
-  hash  String?
-  refreshTokenHash String?
-  passwordResetToken String?
+  email                    String    @unique
+  hash                     String?
+  refreshTokenHash         String?
+  passwordResetToken       String?
   passwordResetTokenExpiry DateTime?
+  isActive                 Boolean   @default(false)
 
   userName    String  @unique
   displayName String?
@@ -46,6 +47,18 @@ model User {
   @@map("users")
 }
 
+model Verifications {
+  id        String   @id @default(uuid())
+  email     String
+  code      String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  used      Boolean  @default(false)
+
+  @@unique([email, code])
+  @@map("verifications")
+}
+
 model Post {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
@@ -67,8 +80,8 @@ model Post {
   replyTo   Post?   @relation("ReplyThread", fields: [replyToId], references: [id])
 
   // Quotes & Reposts
-  reposts   Repost[]
-  quotes   Quote[]
+  reposts Repost[]
+  quotes  Quote[]
 
   // Engagement
   likes     Like[]

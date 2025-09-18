@@ -51,6 +51,12 @@ export class UserService {
     });
     if (!user) return { message: 'Invalid or expired reset token.' };
     const hash = await argon.hash(dto.newPassword);
+    const verifyPassword = await argon.verify(hash, dto.newPassword);
+    if (verifyPassword) {
+      throw new ForbiddenException(
+        'New password must be different from the old password.',
+      );
+    }
     await this.prisma.user.update({
       where: { id: user.id },
       data: {

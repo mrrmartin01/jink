@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -41,7 +43,6 @@ export class TokenService {
     if (!user || !user.refreshTokenHash)
       throw new ForbiddenException('Access Denied');
     const refreshTokenMatches = await argon.verify(
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       user.refreshTokenHash,
       refreshToken,
     );
@@ -63,6 +64,28 @@ export class TokenService {
     await this.prisma.user.update({
       where: { id: userId },
       data: { refreshTokenHash },
+    });
+  }
+
+  async removeRefreshToken(refreshToken: string) {
+    const payload = await this.verifyRefreshToken(refreshToken);
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+    });
+
+    if (!user || !user.refreshTokenHash) {
+      throw new ForbiddenException('Access Denied');
+    }
+
+    const matches = await argon.verify(user.refreshTokenHash, refreshToken);
+    if (!matches) {
+      throw new ForbiddenException('Access Denied');
+    }
+
+    await this.prisma.user.update({
+      where: { id: payload.sub },
+      data: { refreshTokenHash: null },
     });
   }
 }
