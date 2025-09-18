@@ -1,4 +1,11 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import {
@@ -39,8 +46,9 @@ export class AuthController {
   async refresh(@Body() body: RefreshTokenDto) {
     const { refreshToken } = body;
     if (!refreshToken) {
-      return { message: 'refresh token is required' };
+      throw new BadRequestException('Refresh token is required');
     }
-    return this.authService.refreshTokensWithToken(refreshToken);
+
+    return this.authService.refreshTokens(refreshToken);
   }
 }

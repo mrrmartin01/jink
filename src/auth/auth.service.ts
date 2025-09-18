@@ -1,38 +1,20 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RequestPasswordResetDto, SigninDto, SignupDto } from './dto';
-import * as argon from 'argon2';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
 import * as Crypto from 'crypto';
+import { hashPassword, verifyPassword } from './utils/password.util';
+import { TokenService } from './tokens/token.service';
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
-    private jwt: JwtService,
-    private config: ConfigService,
+    private tokenService: TokenService,
   ) {}
 
-  async refreshTokensWithToken(refreshToken: string) {
-    try {
-      const payload = this.jwt.decode(refreshToken) as {
-        sub?: string;
-        email?: string;
-      } | null;
-      const userId = payload?.sub;
-      if (!userId) {
-        return { message: 'Invalid refresh token payload' };
-      }
-      return this.refreshTokens(userId, refreshToken);
-    } catch {
-      return { message: 'Invalid refresh token' };
-    }
-  }
-
   async signup(dto: SignupDto) {
-    const hash = await argon.hash(dto.password);
+    const hash = await hashPassword(dto.password);
     try {
       const user = await this.prisma.user.create({
         data: {
@@ -43,9 +25,22 @@ export class AuthService {
           hash,
         },
       });
-      const tokens = await this.getTokens(user.id, user.email);
-      await this.updateRefreshTokenHash(user.id, tokens.refresh_token);
-      return tokens;
+      const tokens = await this.tokenService.generateTokens(
+        user.id,
+        user.email,
+      );
+      await this.tokenService.updateRefreshTokenHash(
+        user.id,
+        tokens.refresh_token,
+      );
+      return {
+        ...tokens,
+        user: {
+          userName: user.userName,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        },
+      };
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
@@ -68,26 +63,20 @@ export class AuthService {
     if (!user || !user.hash) {
       throw new ForbiddenException('Credentials incorrect');
     }
-    const pwMatches = await argon.verify(user.hash, dto.password);
+    const pwMatches = await verifyPassword(user.hash, dto.password);
     if (!pwMatches) throw new ForbiddenException('Credentials incorrect');
-    const tokens = await this.getTokens(user.id, user.email);
-    await this.updateRefreshTokenHash(user.id, tokens.refresh_token);
-    return tokens;
-  }
-
-  async signToken(
-    userId: string,
-    email: string,
-  ): Promise<{ access_token: string }> {
-    const payload = { sub: userId, email };
-    const secret = this.config.get<string>('JWT_SECRET');
-    if (!secret) throw new Error('Auth.service ==> JWT_SECRET is not defined');
-    const token = await this.jwt.signAsync(payload, {
-      expiresIn: '15m',
-      secret: secret,
-    });
+    const tokens = await this.tokenService.generateTokens(user.id, user.email);
+    await this.tokenService.updateRefreshTokenHash(
+      user.id,
+      tokens.refresh_token,
+    );
     return {
-      access_token: token,
+      ...tokens,
+      user: {
+        userName: user.userName,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
     };
   }
 
@@ -111,42 +100,9 @@ export class AuthService {
     return { message: 'If that email exists, a reset link has been sent.' };
   }
 
-  async getTokens(
-    userId: string,
-    email: string,
-  ): Promise<{ access_token: string; refresh_token: string }> {
-    const payload = { sub: userId, email };
-    const accessSecret = this.config.get<string>('JWT_SECRET');
-    const refreshSecret = this.config.get<string>('JWT_REFRESH_SECRET');
-    if (!accessSecret || !refreshSecret)
-      throw new Error('JWT secrets are not defined');
-    const [access_token, refresh_token] = await Promise.all([
-      this.jwt.signAsync(payload, { expiresIn: '15m', secret: accessSecret }),
-      this.jwt.signAsync(payload, { expiresIn: '7d', secret: refreshSecret }),
-    ]);
-    return { access_token, refresh_token };
-  }
-
-  async updateRefreshTokenHash(userId: string, refreshToken: string) {
-    const refreshTokenHash = await argon.hash(refreshToken);
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { refreshTokenHash },
-    });
-  }
-
-  async refreshTokens(userId: string, refreshToken: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user || !user.refreshTokenHash)
-      throw new ForbiddenException('Access Denied');
-    const refreshTokenMatches = await argon.verify(
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      user.refreshTokenHash,
-      refreshToken,
-    );
-    if (!refreshTokenMatches) throw new ForbiddenException('Access Denied');
-    const tokens = await this.getTokens(user.id, user.email);
-    await this.updateRefreshTokenHash(user.id, tokens.refresh_token);
-    return tokens;
+  async refreshTokens(refreshToken: string) {
+    const payload = await this.tokenService.verifyRefreshToken(refreshToken);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+    return this.tokenService.refreshTokens(payload.sub, refreshToken);
   }
 }

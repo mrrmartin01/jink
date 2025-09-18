@@ -1,0 +1,68 @@
+import { ForbiddenException, Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { PrismaService } from 'src/prisma/prisma.service';
+import * as argon from 'argon2';
+
+@Injectable()
+export class TokenService {
+  constructor(
+    private prisma: PrismaService,
+    private jwt: JwtService,
+    private config: ConfigService,
+  ) {}
+
+  async generateTokens(userId: string, email: string) {
+    const payload = { sub: userId, email };
+    const accessSecret = this.config.get<string>('JWT_SECRET');
+    const refreshSecret = this.config.get<string>('JWT_REFRESH_SECRET');
+
+    const [access_token, refresh_token] = await Promise.all([
+      this.jwt.signAsync(payload, { expiresIn: '15m', secret: accessSecret }),
+      this.jwt.signAsync(payload, { expiresIn: '7d', secret: refreshSecret }),
+    ]);
+
+    return { access_token, refresh_token };
+  }
+
+  async verifyRefreshToken(token: string) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return await this.jwt.verifyAsync(token, {
+        secret: this.config.get<string>('JWT_REFRESH_SECRET'),
+      });
+    } catch {
+      throw new ForbiddenException('Invalid refresh token');
+    }
+  }
+
+  async refreshTokens(userId: string, refreshToken: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.refreshTokenHash)
+      throw new ForbiddenException('Access Denied');
+    const refreshTokenMatches = await argon.verify(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      user.refreshTokenHash,
+      refreshToken,
+    );
+    if (!refreshTokenMatches) throw new ForbiddenException('Access Denied');
+    const tokens = await this.generateTokens(user.id, user.email);
+    await this.updateRefreshTokenHash(user.id, tokens.refresh_token);
+    return {
+      ...tokens,
+      user: {
+        userName: user.userName,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+    };
+  }
+
+  async updateRefreshTokenHash(userId: string, refreshToken: string) {
+    const refreshTokenHash = await argon.hash(refreshToken);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { refreshTokenHash },
+    });
+  }
+}
