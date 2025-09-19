@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   BadRequestException,
   ForbiddenException,
@@ -8,10 +9,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { EditUserDto, ResetPasswordDto } from './dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import * as argon from 'argon2';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cloudinaryService: CloudinaryService,
+  ) {}
 
   async editUser(userId: string, dto: EditUserDto) {
     console.log(dto);
@@ -62,6 +67,47 @@ export class UserService {
       throw error;
     }
     return { message: 'Profile editted succesfully' };
+  }
+
+  async deleteProfilePicture(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+    if (!user.profileImageUrl)
+      throw new NotFoundException("You don't have a profile picture");
+
+    if (user.profileImageId) {
+      await this.cloudinaryService.deleteImage(user.profileImageId);
+    }
+
+    return { masssage: 'Profile picture deleted' };
+  }
+
+  async uploadProfilePicture(userId: string, file: Express.Multer.File) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    // delete old image if it exists
+    if (user.profileImageId) {
+      await this.cloudinaryService.deleteImage(user.profileImageId);
+    }
+
+    const uploadResult = await this.cloudinaryService.uploadImage(
+      file,
+      'profile_pictures',
+    );
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        profileImageUrl: uploadResult.secure_url,
+        profileImageId: uploadResult.public_id,
+      },
+    });
+
+    return {
+      message: 'Profile picture updated successfully',
+      profileImage: uploadResult.secure_url,
+    };
   }
 
   async resetPassword(dto: ResetPasswordDto) {

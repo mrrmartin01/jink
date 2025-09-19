@@ -19,7 +19,7 @@ export class EditUserDto {
 
   @IsString()
   @IsOptional()
-  @ApiProperty({ example: 'test_userxx', required: false })
+  @ApiProperty({ example: 'test_userxx profile bio', required: false })
   bio?: string;
 
   @IsString()

@@ -32,11 +32,14 @@ model User {
   firstName String?
   lastName  String?
 
-  posts     Post[]
-  likes     Like[]
-  bookmarks Bookmark[]
-  reposts   Repost[]
-  quotes    Quote[]
+  profileImageUrl String?
+  profileImageId  String?
+  
+  posts           Post[]
+  likes           Like[]
+  bookmarks       Bookmark[]
+  reposts         Repost[]
+  quotes          Quote[]
 
   following Follow[] @relation("Following")
   followers Follow[] @relation("Followers")

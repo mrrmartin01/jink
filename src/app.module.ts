@@ -10,6 +10,7 @@ import { RepostModule } from './repost/repost.module';
 import { QuoteModule } from './quote/quote.module';
 import { BookmarkModule } from './bookmark/bookmark.module';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -29,6 +30,8 @@ import { ThrottlerModule } from '@nestjs/throttler';
     RepostModule,
     QuoteModule,
     BookmarkModule,
+    CloudinaryModule,
   ],
+  providers: [],
 })
 export class AppModule {}

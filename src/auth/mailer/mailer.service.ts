@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
 import * as Crypto from 'crypto';
@@ -33,7 +32,7 @@ export class MailService {
   }
 
   async welcomeUser(email: string, username: string) {
-    const homepage = this.config.get('FRONTEND_URL');
+    const homepage = `${process.env.FRONTEND_URL}`;
     const html = welcomeEmailTemplate(username, homepage);
     await this.mailer.sendMail({
       to: email,

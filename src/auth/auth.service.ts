@@ -88,6 +88,7 @@ export class AuthService {
         userName: user.userName,
         firstName: user.firstName,
         lastName: user.lastName,
+        profileImage: user.profileImageUrl,
       },
     };
   }
