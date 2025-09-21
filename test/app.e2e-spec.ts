@@ -211,7 +211,6 @@ describe('App e2e', () => {
 
     describe('Edit user', () => {
       const dto: EditUserDto = {
-        password: 'testabc',
         userName: 'bbk_user',
         displayName: 'bbk',
         bio: 'Just a happy dark themed user here',

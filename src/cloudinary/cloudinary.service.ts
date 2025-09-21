@@ -1,4 +1,3 @@
-// cloudinary.service.ts
 import { Inject, Injectable } from '@nestjs/common';
 import {
   v2 as Cloudinary,
