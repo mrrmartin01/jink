@@ -2,9 +2,11 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.use(cookieParser());
 
   const config = new DocumentBuilder()
     .setTitle('Jink API')
@@ -13,13 +15,16 @@ async function bootstrap() {
     )
     .setVersion('1.0')
     .addBearerAuth()
+    .addServer('/api')
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  const document = SwaggerModule.createDocument(app, config, {
+    ignoreGlobalPrefix: false,
+  });
+  SwaggerModule.setup(`api/docs`, app, document);
 
   app.enableCors({
-    origin: ['http://localhost:3000', 'https://yourfrontend.com'], // Allowed origins
+    origin: [process.env.FRONTEND_URL], // Allowed origins
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Allowed HTTP methods
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'], // Allowed request headers

@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+// src/auth/strategy/jwt.strategy.ts
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
@@ -12,8 +15,20 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   ) {
     const secret = config.get<string>('JWT_SECRET');
     if (!secret) throw new Error('JwtStrategy ==> JWT_SECRET is not defined');
+
+    // Extractor to read token from cookie `access_token`
+    const cookieExtractor = (req: any) => {
+      let token: string | null = null;
+      if (req && req.cookies) token = req.cookies['access_token'];
+      // fallback to header if needed:
+      if (!token) {
+        token = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+      }
+      return token;
+    };
+
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: cookieExtractor,
       secretOrKey: secret,
     });
   }

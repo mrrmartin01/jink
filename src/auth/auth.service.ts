@@ -151,15 +151,18 @@ export class AuthService {
       where: { email: dto.email },
     });
 
+    await this.mailerService.sendActivationEmail(dto.email);
+
     const timer = await this.prisma.verifications.findFirst({
       where: {
         email: dto.email,
       },
     });
 
-    await this.mailerService.sendActivationEmail(dto.email);
-
-    return { codeTimer: timer?.expiresAt };
+    return {
+      message: 'Please check your email to for th new activation code.',
+      codeTimer: timer?.expiresAt,
+    };
   }
 
   async signin(dto: SigninDto) {
