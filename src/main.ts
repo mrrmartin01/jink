@@ -18,7 +18,15 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
+  app.enableCors({
+    origin: ['http://localhost:3000', 'https://yourfrontend.com'], // Allowed origins
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Allowed HTTP methods
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allowed request headers
+  });
+
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.setGlobalPrefix('api');
   await app.listen(process.env.PORT ?? 9000);
 }
 bootstrap();

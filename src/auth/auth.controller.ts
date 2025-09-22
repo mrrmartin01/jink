@@ -14,6 +14,7 @@ import {
   RefreshTokenDto,
   ForgotPasswordDto,
   VerifyUserDto,
+  ReVerifyUserDto,
 } from './dto';
 import { Throttle } from '@nestjs/throttler';
 
@@ -45,7 +46,7 @@ export class AuthController {
   @Throttle({ auth: {} })
   @Post('re-verify')
   @HttpCode(HttpStatus.OK)
-  async re_verify(@Body() body: VerifyUserDto) {
+  async re_verify(@Body() body: ReVerifyUserDto) {
     return await this.authService.re_verifyAccount(body);
   }
 

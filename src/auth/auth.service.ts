@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import {
   ForgotPasswordDto,
   RefreshTokenDto,
+  ReVerifyUserDto,
   SigninDto,
   SignupDto,
   VerifyUserDto,
@@ -28,10 +29,28 @@ export class AuthService {
   async signup(dto: SignupDto) {
     const hash = await hashPassword(dto.password);
     try {
+      const existingUserName = await this.prisma.user.findFirst({
+        where: {
+          userName: dto.userName,
+        },
+      });
+
+      if (existingUserName)
+        throw new BadRequestException('Sorry, username is taken');
+
+      const existingEmail = await this.prisma.user.findFirst({
+        where: {
+          email: dto.email,
+        },
+      });
+
+      if (existingEmail) throw new BadRequestException('Sorry, email is taken');
+
       const user = await this.prisma.user.create({
         data: {
           email: dto.email?.trim().toLowerCase(),
           userName: dto.userName?.trim().toLowerCase(),
+          displayName: dto.displayName?.trim().toLowerCase(),
           firstName: dto.firstName?.trim().replace(/\s+/g, ''),
           lastName: dto.lastName?.trim().replace(/\s+/g, ''),
           hash,
@@ -40,9 +59,16 @@ export class AuthService {
       });
       await this.mailerService.sendActivationEmail(user.email);
 
+      const timer = await this.prisma.verifications.findFirst({
+        where: {
+          email: dto.email,
+        },
+      });
+
       return {
         message:
           'Signup successful. Please check your email to activate your account.',
+        codeTimer: timer?.expiresAt,
       };
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
@@ -57,6 +83,13 @@ export class AuthService {
   }
 
   async verifyAccount(dto: VerifyUserDto) {
+    await this.prisma.verifications.deleteMany({
+      where: {
+        email: dto.email,
+        expiresAt: { lte: new Date() },
+      },
+    });
+
     const record = await this.prisma.verifications.findFirst({
       where: {
         email: dto.email,
@@ -68,6 +101,14 @@ export class AuthService {
 
     if (!record) {
       throw new ForbiddenException('Invalid or expired verification code.');
+    }
+
+    if (record.expiresAt <= new Date()) {
+      throw new BadRequestException('Token expired, please request a new one.');
+    }
+
+    if (record.used) {
+      throw new ForbiddenException('Verification code has already been used.');
     }
 
     const user = await this.prisma.user.update({
@@ -93,7 +134,7 @@ export class AuthService {
     };
   }
 
-  async re_verifyAccount(dto: VerifyUserDto) {
+  async re_verifyAccount(dto: ReVerifyUserDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -110,7 +151,15 @@ export class AuthService {
       where: { email: dto.email },
     });
 
-    return await this.mailerService.sendActivationEmail(dto.email);
+    const timer = await this.prisma.verifications.findFirst({
+      where: {
+        email: dto.email,
+      },
+    });
+
+    await this.mailerService.sendActivationEmail(dto.email);
+
+    return { codeTimer: timer?.expiresAt };
   }
 
   async signin(dto: SigninDto) {
@@ -134,6 +183,7 @@ export class AuthService {
       ...tokens,
       user: {
         userName: user.userName,
+        displayName: user.displayName,
         firstName: user.firstName,
         lastName: user.lastName,
       },

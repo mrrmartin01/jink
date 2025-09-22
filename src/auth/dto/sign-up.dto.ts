@@ -18,6 +18,11 @@ export class SignupDto {
   userName: string;
 
   @IsString()
+  @IsNotEmpty()
+  @ApiProperty({ example: 'JohnD_1' })
+  displayName: string;
+
+  @IsString()
   @ApiProperty({ example: 'John', required: false })
   firstName?: string;
 
