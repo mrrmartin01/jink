@@ -52,9 +52,10 @@ export class TokenService {
     return {
       ...tokens,
       user: {
+        id: user.id,
         userName: user.userName,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        displayName: user.displayName,
+        profileImage: user.profileImageUrl,
       },
     };
   }
