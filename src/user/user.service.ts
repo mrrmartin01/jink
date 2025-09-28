@@ -110,14 +110,13 @@ export class UserService {
     };
   }
 
-  async resetPassword(dto: ResetPasswordDto) {
+  async changePassword(userId: string, dto: ResetPasswordDto) {
     const user = await this.prisma.user.findFirst({
       where: {
-        passwordResetToken: dto.token,
-        passwordResetTokenExpiry: { gt: new Date() },
+        id: userId,
       },
     });
-    if (!user) return { message: 'Invalid or expired reset token.' };
+    if (!user) return { message: 'No user found.' };
     const hash = await argon.hash(dto.newPassword);
     const verifyPassword = await argon.verify(hash, dto.newPassword);
     if (verifyPassword) {

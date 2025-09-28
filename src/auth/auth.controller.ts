@@ -19,6 +19,7 @@ import {
   ForgotPasswordDto,
   VerifyUserDto,
   ReVerifyUserDto,
+  ResetPasswordDto,
 } from './dto';
 import {
   ACCESS_TOKEN_COOKIE,
@@ -43,6 +44,12 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 
   @Throttle({ auth: {} })

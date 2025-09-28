@@ -48,9 +48,12 @@ export class UserController {
     return await this.userService.deleteProfilePicture(userId);
   }
 
-  @Post('reset-password')
+  @Post('change-password')
   @HttpCode(HttpStatus.OK)
-  async resetPassword(@Body() dto: ResetPasswordDto) {
-    return await this.userService.resetPassword(dto);
+  async changePassword(
+    @GetUser('id') userId: string,
+    @Body() dto: ResetPasswordDto,
+  ) {
+    return await this.userService.changePassword(userId, dto);
   }
 }

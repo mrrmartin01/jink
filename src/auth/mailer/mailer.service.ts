@@ -48,10 +48,8 @@ export class MailService {
   }
 
   async sendPasswordReset(email: string, token: string) {
-    const url = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    const url = `${process.env.FRONTEND_URL}/auth/reset-password?token=${token}`;
     const html = resetPasswordTemplate(url);
-    console.log(url);
-
     await this.mailer.sendMail({
       to: email,
       subject: 'Password Reset',

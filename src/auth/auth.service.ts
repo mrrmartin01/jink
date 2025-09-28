@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import {
   ForgotPasswordDto,
   RefreshTokenDto,
+  ResetPasswordDto,
   ReVerifyUserDto,
   SigninDto,
   SignupDto,
@@ -15,6 +16,7 @@ import {
 } from './dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import * as Crypto from 'crypto';
+import * as argon from 'argon2';
 import { hashPassword, verifyPassword } from './utils/password.util';
 import { TokenService } from './tokens/token.service';
 import { MailService } from './mailer/mailer.service';
@@ -206,7 +208,7 @@ export class AuthService {
       throw new ForbiddenException('Sorry, we could not find your email.');
     }
     const token = Crypto.randomBytes(32).toString('hex');
-    const expiry = new Date(Date.now() + 1000 * 60 * 30); // 30 minutes
+    const expiry = new Date(Date.now() + 1000 * 60 * 30);
     await this.prisma.user.update({
       where: { id: user.id },
       data: { passwordResetToken: token, passwordResetTokenExpiry: expiry },
@@ -214,6 +216,35 @@ export class AuthService {
 
     await this.mailerService.sendPasswordReset(user.email, token);
     return { message: 'If that email exists, a reset link has been sent.' };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        passwordResetToken: dto.token,
+        passwordResetTokenExpiry: { gt: new Date() },
+      },
+    });
+    if (!user)
+      throw new BadRequestException({
+        message: 'Invalid or expired reset token.',
+      });
+    const hash = await argon.hash(dto.newPassword);
+    const verifyPassword = await argon.verify(hash, dto.newPassword);
+    if (verifyPassword) {
+      throw new ForbiddenException(
+        'New password must be different from the old password.',
+      );
+    }
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        hash,
+        passwordResetToken: null,
+        passwordResetTokenExpiry: null,
+      },
+    });
+    return { message: 'Password has been reset successfully.' };
   }
 
   async refreshTokens(refreshToken: string) {
