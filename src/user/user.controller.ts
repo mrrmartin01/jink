@@ -48,6 +48,20 @@ export class UserController {
     return await this.userService.deleteProfilePicture(userId);
   }
 
+  @Post('cover-picture')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadCoverPicture(
+    @GetUser('id') userId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return await this.userService.uploadCoverPicture(userId, file);
+  }
+
+  @Delete('cover-picture')
+  async deleteCoverPicture(@GetUser('id') userId: string) {
+    return await this.userService.deleteCoverPicture(userId);
+  }
+
   @Post('change-password')
   @HttpCode(HttpStatus.OK)
   async changePassword(

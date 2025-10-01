@@ -19,6 +19,21 @@ export class EditUserDto {
 
   @IsString()
   @IsOptional()
+  @ApiProperty({ example: '1759164514131', required: false })
+  birthday?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'test_userxx', required: false })
+  website?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ example: 'test_userxx', required: false })
+  location?: string;
+
+  @IsString()
+  @IsOptional()
   @ApiProperty({ example: 'test_userxx profile bio', required: false })
   bio?: string;
 

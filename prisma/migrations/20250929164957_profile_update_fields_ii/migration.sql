@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "users" ALTER COLUMN "website" DROP NOT NULL,
+ALTER COLUMN "website" DROP DEFAULT,
+ALTER COLUMN "website" SET DATA TYPE TEXT;

@@ -47,6 +47,16 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         lastName: true,
         createdAt: true,
         updatedAt: true,
+        posts: true,
+        followers: true,
+        following: true,
+        _count: {
+          select: { followers: true, following: true, posts: true },
+        },
+        coverImageUrl: true,
+        location: true,
+        website: true,
+        birthday: true,
         pinnedPostId: true,
       },
     });

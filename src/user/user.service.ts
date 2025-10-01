@@ -110,6 +110,48 @@ export class UserService {
     };
   }
 
+  //cover picture
+  async deleteCoverPicture(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+    if (!user.coverImageUrl)
+      throw new NotFoundException("You don't have a profile picture");
+
+    if (user.coverImageId) {
+      await this.cloudinaryService.deleteImage(user.coverImageId);
+    }
+
+    return { masssage: 'Cover picture deleted' };
+  }
+
+  async uploadCoverPicture(userId: string, file: Express.Multer.File) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    // delete old image if it exists
+    if (user.coverImageId) {
+      await this.cloudinaryService.deleteImage(user.coverImageId);
+    }
+
+    const uploadResult = await this.cloudinaryService.uploadImage(
+      file,
+      'cover_pictures',
+    );
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        coverImageUrl: uploadResult.secure_url,
+        coverImageId: uploadResult.public_id,
+      },
+    });
+
+    return {
+      message: 'Cover picture updated successfully',
+      coverImage: uploadResult.secure_url,
+    };
+  }
+
   async changePassword(userId: string, dto: ResetPasswordDto) {
     const user = await this.prisma.user.findFirst({
       where: {

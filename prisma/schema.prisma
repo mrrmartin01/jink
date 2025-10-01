@@ -19,7 +19,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   email                    String    @unique
-  hash                     String?
+  hash                     String
   refreshTokenHash         String?
   passwordResetToken       String?
   passwordResetTokenExpiry DateTime?
@@ -28,12 +28,18 @@ model User {
   userName    String  @unique
   displayName String?
   bio         String?
+  location    String?
+  website     String?
+  birthday    DateTime?
 
   firstName String?
   lastName  String?
 
   profileImageUrl String?
   profileImageId  String?
+
+  coverImageUrl String?
+  coverImageId  String?
   
   posts           Post[]
   likes           Like[]
